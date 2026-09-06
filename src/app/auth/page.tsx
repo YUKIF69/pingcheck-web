@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/components/AuthContext';
 import axios from 'axios';
 
-export default function Auth() {
+function AuthForm() {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<'login' | 'register'>(
     searchParams.get('tab') === 'register' ? 'register' : 'login',
@@ -57,34 +57,24 @@ export default function Auth() {
       login(response.data.access_token);
       router.push('/dashboard');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
+      if (axios.isAxiosError(error))
         setError(error.response?.data?.message || 'Registration failed');
-      } else {
-        setError('Something went wrong');
-      }
+      else setError('Something went wrong');
     } finally {
       setIsLoading(false);
     }
   }
 
-  const inputClass = `
-    w-full bg-surface-2 border border-line rounded-lg px-4 py-2.5
-    text-sm text-foreground placeholder:text-text-dim
-    focus:outline-none focus:border-accent transition-colors
-  `;
+  const inputClass = `w-full bg-surface-2 border border-line rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-text-dim focus:outline-none focus:border-accent transition-colors`;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        {/* Логотип */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-foreground">PingCheck</h1>
           <p className="text-sm text-text-dim mt-1">Monitor your websites 24/7</p>
         </div>
-
-        {/* Карточка */}
         <div className="bg-surface border border-line rounded-xl p-6">
-          {/* Таби */}
           <div className="flex bg-surface-2 rounded-lg p-1 mb-6">
             <button
               onClick={() => {
@@ -94,11 +84,7 @@ export default function Auth() {
                 setPassword('');
                 setName('');
               }}
-              className={`flex-1 text-sm py-1.5 rounded-md font-medium transition-colors ${
-                tab === 'login'
-                  ? 'bg-surface text-foreground'
-                  : 'text-text-dim hover:text-foreground'
-              }`}
+              className={`flex-1 text-sm py-1.5 rounded-md font-medium transition-colors ${tab === 'login' ? 'bg-surface text-foreground' : 'text-text-dim hover:text-foreground'}`}
             >
               Log in
             </button>
@@ -110,17 +96,12 @@ export default function Auth() {
                 setPassword('');
                 setName('');
               }}
-              className={`flex-1 text-sm py-1.5 rounded-md font-medium transition-colors ${
-                tab === 'register'
-                  ? 'bg-surface text-foreground'
-                  : 'text-text-dim hover:text-foreground'
-              }`}
+              className={`flex-1 text-sm py-1.5 rounded-md font-medium transition-colors ${tab === 'register' ? 'bg-surface text-foreground' : 'text-text-dim hover:text-foreground'}`}
             >
               Register
             </button>
           </div>
 
-          {/* Login форма */}
           {tab === 'login' && (
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <input
@@ -137,9 +118,7 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 className={inputClass}
               />
-
               {error && <p className="text-xs text-low">{error}</p>}
-
               <button
                 type="submit"
                 disabled={isLoading}
@@ -150,7 +129,6 @@ export default function Auth() {
             </form>
           )}
 
-          {/* Register форма */}
           {tab === 'register' && (
             <form onSubmit={handleRegister} className="flex flex-col gap-3">
               <input
@@ -174,9 +152,7 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 className={inputClass}
               />
-
               {error && <p className="text-xs text-low">{error}</p>}
-
               <button
                 type="submit"
                 disabled={isLoading}
@@ -189,5 +165,13 @@ export default function Auth() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <AuthForm />
+    </Suspense>
   );
 }
