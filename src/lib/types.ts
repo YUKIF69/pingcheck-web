@@ -25,3 +25,8 @@ export interface PingLog {
 export interface AuthResponse {
   access_token: string;
 }
+
+export interface Subscription {
+  plan: 'free' | 'premium';
+  status: string;
+}
