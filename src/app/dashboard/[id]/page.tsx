@@ -26,9 +26,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void }) {
   const [editInterval, setEditInterval] = useState(monitor.intervalMinutes);
   const [editIsPublic, setEditIsPublic] = useState(monitor.isPublic);
-  const [isLoading, setIsLoading] = useState(false);
+  const [editSlug, setEditSlug] = useState(monitor.slug ?? '');
   const [isOpen, setIsOpen] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   async function handleSave() {
@@ -37,6 +37,7 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
       await api.patch(`/monitors/${monitor.id}`, {
         intervalMinutes: editInterval,
         isPublic: editIsPublic,
+        slug: editSlug || null,
       });
       onClose();
       router.refresh();
@@ -49,21 +50,22 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — закриває модалку при кліку поза нею */}
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Модальне вікно */}
+      {/* Модальне вікно по центру екрану */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md bg-surface border border-line rounded-2xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-foreground">Settings</h3>
           <button
             onClick={onClose}
-            className="text-text-dim hover:text-foreground transition-colors text-lg cursor-pointer"
+            className="text-text-dim hover:text-foreground transition-colors text-lg"
           >
             ✕
           </button>
         </div>
 
+        {/* Вибір інтервалу пінгування */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs text-text-dim uppercase tracking-widest">Check interval</label>
           <div className="relative">
@@ -101,6 +103,26 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
           </div>
         </div>
 
+        {/* Slug для публічної сторінки */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs text-text-dim uppercase tracking-widest">
+            Public slug (optional)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. my-website"
+            value={editSlug}
+            onChange={(e) => setEditSlug(e.target.value)}
+            className="w-full bg-surface-2 border border-line rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-text-dim focus:outline-none focus:border-accent transition-colors"
+          />
+          {editSlug && (
+            <p className="text-xs text-text-dim">
+              Public URL: pingcheck-web.vercel.app/status/{editSlug}
+            </p>
+          )}
+        </div>
+
+        {/* Toggle — публічний монітор чи ні */}
         <div
           className="flex items-center justify-between bg-surface-2 border border-line rounded-lg px-4 py-3 cursor-pointer"
           onClick={() => setEditIsPublic((prev) => !prev)}
@@ -121,14 +143,14 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-surface-2 hover:bg-line text-foreground text-sm py-2.5 rounded-lg transition-colors cursor-pointer"
+            className="flex-1 bg-surface-2 hover:bg-line text-foreground text-sm py-2.5 rounded-lg transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isLoading}
-            className="flex-1 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors cursor-pointer"
+            className="flex-1 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
           >
             {isLoading ? 'Saving...' : 'Save changes'}
           </button>
