@@ -9,6 +9,7 @@ import StatCard from '@/components/StatCard';
 import { getTimeAgo, uptimeColor } from '@/lib/utils';
 import ResponseChart from '@/components/ResponseChart';
 import { IconSettings } from '@tabler/icons-react';
+import axios from 'axios';
 
 interface Stats {
   uptime24h: number | null;
@@ -29,9 +30,11 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
   const [editSlug, setEditSlug] = useState(monitor.slug ?? '');
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleSave() {
+    setError(null);
     setIsLoading(true);
     try {
       await api.patch(`/monitors/${monitor.id}`, {
@@ -41,8 +44,12 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
       });
       onClose();
       router.refresh();
-    } catch {
-      // silent
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err)
+          ? (err.response?.data?.message ?? 'Failed to save')
+          : 'Failed to save',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -50,22 +57,19 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
 
   return (
     <>
-      {/* Backdrop — закриває модалку при кліку поза нею */}
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Модальне вікно по центру екрану */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md bg-surface border border-line rounded-2xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-foreground">Settings</h3>
           <button
             onClick={onClose}
-            className="text-text-dim hover:text-foreground transition-colors text-lg"
+            className="text-text-dim hover:text-foreground transition-colors text-lg cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        {/* Вибір інтервалу пінгування */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs text-text-dim uppercase tracking-widest">Check interval</label>
           <div className="relative">
@@ -103,7 +107,6 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
           </div>
         </div>
 
-        {/* Slug для публічної сторінки */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs text-text-dim uppercase tracking-widest">
             Public slug (optional)
@@ -122,7 +125,6 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
           )}
         </div>
 
-        {/* Toggle — публічний монітор чи ні */}
         <div
           className="flex items-center justify-between bg-surface-2 border border-line rounded-lg px-4 py-3 cursor-pointer"
           onClick={() => setEditIsPublic((prev) => !prev)}
@@ -140,17 +142,19 @@ function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void 
           </div>
         </div>
 
+        {error && <p className="text-xs text-low">{error}</p>}
+
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-surface-2 hover:bg-line text-foreground text-sm py-2.5 rounded-lg transition-colors"
+            className="flex-1 bg-surface-2 hover:bg-line text-foreground text-sm py-2.5 rounded-lg transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isLoading}
-            className="flex-1 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+            className="flex-1 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors cursor-pointer"
           >
             {isLoading ? 'Saving...' : 'Save changes'}
           </button>
