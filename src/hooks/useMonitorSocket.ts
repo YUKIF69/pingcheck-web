@@ -19,8 +19,10 @@ export function useMonitorSocket() {
 
   useEffect(() => {
     // Підключаємось до NestJS WebSocket сервера
-    const socket: Socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
-
+    const socket: Socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', {
+      // Callback викликається при кожному (ре)конекті, тому токен завжди свіжий
+      auth: (cb) => cb({ token: localStorage.getItem('access_token') }),
+    });
     // Коли з'єднання встановлено
     socket.on('connect', () => {
       setConnected(true);
