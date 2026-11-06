@@ -96,9 +96,18 @@ To test Stripe webhooks locally: `stripe listen --forward-to localhost:4000/stri
 | POST             | `/stripe/webhook`               | Stripe signature |
 | GET              | `/health`                       | no               |
 
+## Security
+
+See
+[Security notes and known limitations](https://github.com/YUKIF69/pingcheck-api#security-notes-and-known-limitations)
+in the API repository.
+
 ## Roadmap
 
-- Enforce Free vs Premium limits (monitor count, minimum interval)
 - Edit / pause monitors, incident history
 - Telegram and Slack notifications
-- Automated tests (Jest)
+- Per-owner email alerts (needs a verified sending domain)
+- Full Stripe subscription lifecycle (cancellations, failed renewals)
+- Aggregated stats and ping log retention
+- Move auth tokens from `localStorage` to HttpOnly cookies
+- Automated tests (Jest) and CI

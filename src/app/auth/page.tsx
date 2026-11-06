@@ -33,8 +33,12 @@ function AuthForm() {
       const response = await api.post('/auth/login', { email, password });
       login(response.data.access_token);
       router.push('/dashboard');
-    } catch {
-      setError('Invalid email or password');
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err) && err.response?.status === 429
+          ? 'Too many attempts. Try again in a minute.'
+          : 'Invalid email or password',
+      );
     } finally {
       setIsLoading(false);
     }

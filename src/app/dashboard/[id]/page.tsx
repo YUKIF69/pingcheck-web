@@ -218,7 +218,10 @@ export default function MonitorDetailPage() {
           <h1 className="text-2xl font-bold">{stats.monitor.name}</h1>
           <h2 className="text-text-mid">
             HTTP/S monitor for{' '}
-            <a className="hover:text-foreground transition-colors" href={stats.monitor.url}>
+            <a
+              className="text-foreground hover:underline transition-colors"
+              href={stats.monitor.url}
+            >
               {stats.monitor.url}
             </a>
           </h2>
