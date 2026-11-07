@@ -18,7 +18,9 @@ interface Stats {
   incidents24h: number;
   incidents7d: number;
   incidents30d: number;
-  logs: { id: string; responseMs: number; isUp: boolean; checkedAt: string }[];
+  lastCheck: { isUp: boolean; responseMs: number; checkedAt: string } | null;
+  bars24h: { isUp: boolean }[];
+  chart: { checkedAt: string; responseMs: number; isUp: boolean }[];
   monitor: Monitor;
 }
 
@@ -180,18 +182,11 @@ export default function MonitorDetailPage() {
   if (isLoading) return <div className="p-6 text-text-dim">Loading...</div>;
   if (!stats) return <div className="p-6 text-low">Failed to load</div>;
 
-  const lastLog = stats.logs[stats.logs.length - 1];
-  const currentStatus = lastLog?.isUp ? 'UP' : 'DOWN';
-  const lastCheckAgo = lastLog ? getTimeAgo(lastLog.checkedAt) : '--';
-
-  const logs24h = stats.logs
-    .filter((l) => {
-      const checkedAt = new Date(l.checkedAt).getTime();
-      const logAge = new Date(stats.logs[stats.logs.length - 1].checkedAt).getTime() - checkedAt;
-      return logAge < DAY_MS;
-    })
-    .map((l) => ({ isUp: l.isUp }))
-    .slice(-48);
+  const last = stats.lastCheck;
+  // Три стани: без жодної перевірки статус невідомий, а не UP чи DOWN
+  const currentStatus = last ? (last.isUp ? 'UP' : 'DOWN') : 'UNKNOWN';
+  const statusColor = last ? (last.isUp ? 'text-green' : 'text-low') : 'text-text-dim';
+  const lastCheckAgo = last ? getTimeAgo(last.checkedAt) : '--';
 
   return (
     <div className="p-6">
@@ -218,10 +213,7 @@ export default function MonitorDetailPage() {
           <h1 className="text-2xl font-bold">{stats.monitor.name}</h1>
           <h2 className="text-text-mid">
             HTTP/S monitor for{' '}
-            <a
-              className="text-foreground hover:underline transition-colors"
-              href={stats.monitor.url}
-            >
+            <a className="text-foreground underline hover:no-underline" href={stats.monitor.url}>
               {stats.monitor.url}
             </a>
           </h2>
@@ -232,19 +224,19 @@ export default function MonitorDetailPage() {
             label="Current status"
             value={currentStatus}
             subValue={`checked every ${stats.monitor.intervalMinutes} min`}
-            valueColor={lastLog?.isUp ? 'text-green' : 'text-low'}
+            valueColor={statusColor}
           />
           <StatCard
             label="Last check"
             value={lastCheckAgo}
-            subValue={lastLog?.checkedAt ? new Date(lastLog.checkedAt).toLocaleTimeString() : '--'}
+            subValue={last ? new Date(last.checkedAt).toLocaleTimeString() : '--'}
           />
           <StatCard
             label="Last 24h"
             value={`${stats.uptime24h ?? '--'}%`}
             subValue={`${stats.incidents24h} incidents`}
             valueColor={uptimeColor(stats.uptime24h)}
-            bars={logs24h}
+            bars={stats.bars24h}
           />
         </div>
 
@@ -266,7 +258,7 @@ export default function MonitorDetailPage() {
           </div>
         </div>
 
-        <ResponseChart logs={stats.logs} />
+        <ResponseChart logs={stats.chart} />
       </div>
     </div>
   );

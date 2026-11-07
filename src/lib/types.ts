@@ -8,6 +8,7 @@ export interface Monitor {
   isPublic: boolean;
   slug: string | null;
   createdAt: string;
+  uptime24h?: number | null;
   pingLogs: { isUp: boolean; responseMs: number; checkedAt: string }[];
 }
 

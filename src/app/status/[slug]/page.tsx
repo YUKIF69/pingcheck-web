@@ -9,21 +9,17 @@ import ResponseChart from '@/components/ResponseChart';
 import { getTimeAgo, uptimeColor } from '@/lib/utils';
 
 interface PublicStats {
-  monitor: {
-    name: string;
-    url: string;
-    intervalMinutes: number;
-  };
+  monitor: { name: string; url: string; intervalMinutes: number };
   uptime24h: number | null;
   uptime7d: number | null;
   uptime30d: number | null;
   incidents24h: number;
   incidents7d: number;
   incidents30d: number;
-  logs: { id: string; responseMs: number; isUp: boolean; checkedAt: string }[];
+  lastCheck: { isUp: boolean; responseMs: number; checkedAt: string } | null;
+  bars24h: { isUp: boolean }[];
+  chart: { checkedAt: string; responseMs: number; isUp: boolean }[];
 }
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export default function StatusPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -32,7 +28,7 @@ export default function StatusPage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    // Використовуємо axios без токена — публічний endpoint
+    // Звичайний axios без токена: endpoint публічний
     axios
       .get(`${process.env.NEXT_PUBLIC_API_URL}/monitors/public/${slug}`)
       .then((r) => setStats(r.data))
@@ -52,18 +48,10 @@ export default function StatusPage() {
     );
   if (!stats) return null;
 
-  const lastLog = stats.logs[stats.logs.length - 1];
-  const currentStatus = lastLog?.isUp ? 'UP' : 'DOWN';
-  const lastCheckAgo = lastLog ? getTimeAgo(lastLog.checkedAt) : '--';
-
-  const logs24h = stats.logs
-    .filter((l) => {
-      const checkedAt = new Date(l.checkedAt).getTime();
-      const logAge = new Date(stats.logs[stats.logs.length - 1].checkedAt).getTime() - checkedAt;
-      return logAge < DAY_MS;
-    })
-    .map((l) => ({ isUp: l.isUp }))
-    .slice(-48);
+  const last = stats.lastCheck;
+  const currentStatus = last ? (last.isUp ? 'UP' : 'DOWN') : 'UNKNOWN';
+  const statusColor = last ? (last.isUp ? 'text-green' : 'text-low') : 'text-text-dim';
+  const lastCheckAgo = last ? getTimeAgo(last.checkedAt) : '--';
 
   return (
     <div className="max-w-5xl mx-auto p-6 flex flex-col gap-7">
@@ -82,19 +70,19 @@ export default function StatusPage() {
           label="Current status"
           value={currentStatus}
           subValue={`checked every ${stats.monitor.intervalMinutes} min`}
-          valueColor={lastLog?.isUp ? 'text-green' : 'text-low'}
+          valueColor={statusColor}
         />
         <StatCard
           label="Last check"
           value={lastCheckAgo}
-          subValue={lastLog?.checkedAt ? new Date(lastLog.checkedAt).toLocaleTimeString() : '--'}
+          subValue={last ? new Date(last.checkedAt).toLocaleTimeString() : '--'}
         />
         <StatCard
           label="Last 24h"
           value={`${stats.uptime24h ?? '--'}%`}
           subValue={`${stats.incidents24h} incidents`}
           valueColor={uptimeColor(stats.uptime24h)}
-          bars={logs24h}
+          bars={stats.bars24h}
         />
       </div>
 
@@ -116,7 +104,7 @@ export default function StatusPage() {
         </div>
       </div>
 
-      <ResponseChart logs={stats.logs} />
+      <ResponseChart logs={stats.chart} />
 
       <div className="text-center pt-4 border-t border-line">
         <Link href="/" className="text-text-dim text-xs hover:text-foreground transition-colors">
