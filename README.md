@@ -59,6 +59,18 @@ npm install
 npm run dev            # http://localhost:3000
 ```
 
+![CI](https://github.com/YUKIF69/pingcheck-web/actions/workflows/ci.yml/badge.svg)
+
+## Tests
+
+```bash
+npm test
+```
+
+Unit tests cover the security-critical parts: SSRF protection (private/reserved addresses,
+redirects), Free/Premium plan limits and monitor ownership. CI runs lint, build and tests on every
+push.
+
 ### Environment variables
 
 API (`pingcheck-api/.env`):
@@ -110,4 +122,3 @@ in the API repository.
 - Full Stripe subscription lifecycle (cancellations, failed renewals)
 - Aggregated stats and ping log retention
 - Move auth tokens from `localStorage` to HttpOnly cookies
-- Automated tests (Jest) and CI

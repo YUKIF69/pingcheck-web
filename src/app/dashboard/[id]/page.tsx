@@ -24,8 +24,6 @@ interface Stats {
   monitor: Monitor;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 function EditForm({ monitor, onClose }: { monitor: Monitor; onClose: () => void }) {
   const [editInterval, setEditInterval] = useState(monitor.intervalMinutes);
   const [editIsPublic, setEditIsPublic] = useState(monitor.isPublic);
